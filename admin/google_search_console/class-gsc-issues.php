@@ -1,34 +1,38 @@
 <?php
 /**
- * @package WPSEO\Admin|Google_Search_Console
+ * WPSEO plugin file.
+ *
+ * @package WPSEO\Admin\Google_Search_Console
  */
 
 /**
- * Class WPSEO_GSC_Issues
+ * Class WPSEO_GSC_Issues.
  */
 class WPSEO_GSC_Issues {
 
 	/**
+	 * Holds the option name.
+	 *
 	 * @var string
 	 */
 	private $option_name = '';
 
 	/**
-	 * List of all current issues to compare with received issues
+	 * List of all current issues to compare with received issues.
 	 *
 	 * @var array
 	 */
 	private $current_issues = array();
 
 	/**
-	 * Holder for all the issues
+	 * Holder for all the issues.
 	 *
 	 * @var array
 	 */
 	private $issues = array();
 
 	/**
-	 * Setting up the properties and fetching the current issues
+	 * Setting up the properties and fetching the current issues.
 	 *
 	 * @param string     $platform       Platform type (desktop, mobile, feature phone).
 	 * @param string     $category       Issues category.
@@ -42,6 +46,7 @@ class WPSEO_GSC_Issues {
 			$this->save_fetched_issues( $fetched_issues );
 		}
 	}
+
 	/**
 	 * Getting the issues from the options.
 	 *
@@ -52,7 +57,7 @@ class WPSEO_GSC_Issues {
 	}
 
 	/**
-	 * Deleting the issue from the issues
+	 * Deleting the issue from the issues.
 	 *
 	 * @param string $url URL to delete issues for.
 	 *
@@ -93,7 +98,7 @@ class WPSEO_GSC_Issues {
 	}
 
 	/**
-	 * Comparing the issue with the list of current existing issues
+	 * Comparing the issue with the list of current existing issues.
 	 *
 	 * @param array    $crawl_issues Set of issues by reference.
 	 * @param stdClass $issue        Issue object to check against the list.
@@ -101,7 +106,7 @@ class WPSEO_GSC_Issues {
 	private function issue_compare( &$crawl_issues, $issue ) {
 		$issue->pageUrl = WPSEO_Utils::format_url( (string) $issue->pageUrl );
 
-		if ( ! in_array( $issue->pageUrl, $this->current_issues ) ) {
+		if ( ! in_array( $issue->pageUrl, $this->current_issues, true ) ) {
 			array_push(
 				$crawl_issues,
 				$this->get_issue( $this->create_issue( $issue ) )
@@ -111,7 +116,7 @@ class WPSEO_GSC_Issues {
 
 	/**
 	 * The fetched issue from the API will be parsed as an WPSEO_Crawl_Issue object. After initializing the issue as an
-	 * object, the object will be returned
+	 * object, the object will be returned.
 	 *
 	 * @param stdClass $issue Issue data object.
 	 *
@@ -157,7 +162,7 @@ class WPSEO_GSC_Issues {
 	}
 
 	/**
-	 * Search in the issues for the given $url
+	 * Search in the issues for the given $url.
 	 *
 	 * @param string $url Issue URL to search for.
 	 *

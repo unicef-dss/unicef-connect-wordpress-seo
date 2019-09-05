@@ -1,15 +1,17 @@
 <?php
 /**
- * @package WPSEO\Admin|Google_Search_Console
+ * WPSEO plugin file.
+ *
+ * @package WPSEO\Admin\Google_Search_Console
  */
 
 /**
- * Class WPSEO_GSC_Settings
+ * Class WPSEO_GSC_Settings.
  */
 class WPSEO_GSC_Settings {
 
 	/**
-	 * Clear all data from the database
+	 * Clear all data from the database.
 	 *
 	 * @param WPSEO_GSC_Service $service Service class instance.
 	 */
@@ -25,7 +27,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Reloading all the issues
+	 * Reloading all the issues.
 	 */
 	public static function reload_issues() {
 		// Remove issue and issue counts.
@@ -33,7 +35,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * When authorization is successful return true, otherwise false
+	 * When authorization is successful return true, otherwise false.
 	 *
 	 * @param string                  $authorization_code Code to validate.
 	 * @param Yoast_Api_Google_Client $client             Client object instance.
@@ -45,7 +47,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Get the GSC profile
+	 * Get the GSC profile.
 	 *
 	 * @return string
 	 */
@@ -64,7 +66,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Removes the issue counts and all the issues from the options
+	 * Removes the issue counts and all the issues from the options.
 	 */
 	private static function remove() {
 		// Remove the issue counts from the options.
@@ -75,7 +77,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Remove the issue counts
+	 * Remove the issue counts.
 	 */
 	private static function remove_issue_counts() {
 		// Remove the options which are holding the counts.
@@ -84,7 +86,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Delete the issues and their meta data from the database
+	 * Delete the issues and their meta data from the database.
 	 */
 	private static function remove_issues() {
 		global $wpdb;
@@ -94,7 +96,7 @@ class WPSEO_GSC_Settings {
 	}
 
 	/**
-	 * Removes the options for GSC
+	 * Removes the options for GSC.
 	 */
 	private static function remove_gsc_option() {
 		delete_option( WPSEO_GSC::OPTION_WPSEO_GSC );

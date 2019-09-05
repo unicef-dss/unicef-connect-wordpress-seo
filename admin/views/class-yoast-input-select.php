@@ -1,5 +1,7 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
  */
 
@@ -9,27 +11,37 @@
 class Yoast_Input_Select {
 
 	/**
+	 * The id attribute value.
+	 *
 	 * @var string
 	 */
 	private $select_id;
 
 	/**
+	 * The name attribute value.
+	 *
 	 * @var string
 	 */
 	private $select_name;
 
 	/**
+	 * Additional select attributes.
+	 *
 	 * @var array
 	 */
 	private $select_attributes = array();
 
 	/**
-	 * @var array Array with the options to parse.
+	 * Array with the options to parse.
+	 *
+	 * @var array
 	 */
 	private $select_options;
 
 	/**
-	 * @var string The current selected option.
+	 * The current selected option.
+	 *
+	 * @var string
 	 */
 	private $selected_option;
 
@@ -42,10 +54,10 @@ class Yoast_Input_Select {
 	 * @param string $selected_option The current selected option.
 	 */
 	public function __construct( $select_id, $select_name, array $select_options, $selected_option ) {
-		$this->select_id         = $select_id;
-		$this->select_name       = $select_name;
-		$this->select_options    = $select_options;
-		$this->selected_option   = $selected_option;
+		$this->select_id       = $select_id;
+		$this->select_name     = $select_name;
+		$this->select_options  = $select_options;
+		$this->selected_option = $selected_option;
 	}
 
 	/**
@@ -55,11 +67,11 @@ class Yoast_Input_Select {
 		// Extract it, because we want each value accessible via a variable instead of accessing it as an array.
 		extract( $this->get_select_values() );
 
-		require( dirname( WPSEO_FILE ) . '/admin/views/form/select.php' );
+		require WPSEO_PATH . 'admin/views/form/select.php';
 	}
 
 	/**
-	 * Return the rendered view
+	 * Return the rendered view.
 	 *
 	 * @return string
 	 */
@@ -75,7 +87,7 @@ class Yoast_Input_Select {
 	}
 
 	/**
-	 * Add an attribute to the attributes property
+	 * Add an attribute to the attributes property.
 	 *
 	 * @param string $attribute The name of the attribute to add.
 	 * @param string $value     The value of the attribute.
@@ -85,7 +97,7 @@ class Yoast_Input_Select {
 	}
 
 	/**
-	 * Return the set fields for the select
+	 * Return the set fields for the select.
 	 *
 	 * @return array
 	 */

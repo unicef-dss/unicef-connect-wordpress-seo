@@ -1,10 +1,12 @@
 <?php
 /**
- * @package WPSEO\Admin|Google_Search_Console
+ * WPSEO plugin file.
+ *
+ * @package WPSEO\Admin\Google_Search_Console
  */
 
 /**
- * Class WPSEO_GSC_Mapper
+ * Class WPSEO_GSC_Mapper.
  */
 class WPSEO_GSC_Mapper {
 
@@ -21,7 +23,7 @@ class WPSEO_GSC_Mapper {
 	);
 
 	/**
-	 * The categories which can be mapped
+	 * The categories which can be mapped.
 	 *
 	 * @var array
 	 */
@@ -44,7 +46,8 @@ class WPSEO_GSC_Mapper {
 	 * @return mixed
 	 */
 	public static function get_current_platform( $platform ) {
-		if ( $current_platform = filter_input( INPUT_GET, $platform ) ) {
+		$current_platform = filter_input( INPUT_GET, $platform );
+		if ( ! empty( $current_platform ) ) {
 			return $current_platform;
 		}
 
@@ -53,7 +56,7 @@ class WPSEO_GSC_Mapper {
 	}
 
 	/**
-	 * Mapping the platform
+	 * Mapping the platform.
 	 *
 	 * @param string $platform Platform (desktop, mobile, feature phone).
 	 *
@@ -66,15 +69,18 @@ class WPSEO_GSC_Mapper {
 	}
 
 	/**
-	 * Mapping the given platform by value and return its key
+	 * Mapping the given platform by value and return its key.
 	 *
 	 * @param string $platform Platform (desktop, mobile, feature phone).
 	 *
 	 * @return string
 	 */
 	public static function platform_from_api( $platform ) {
-		if ( ! empty( $platform ) && $platform = array_search( $platform, self::$platforms ) ) {
-			return $platform;
+		if ( ! empty( $platform ) ) {
+			$platform = array_search( $platform, self::$platforms, true );
+			if ( $platform !== false ) {
+				return $platform;
+			}
 		}
 
 		return $platform;
@@ -96,15 +102,18 @@ class WPSEO_GSC_Mapper {
 	}
 
 	/**
-	 * Mapping the given category by value and return its key
+	 * Mapping the given category by value and return its key.
 	 *
 	 * @param string $category Issue type.
 	 *
 	 * @return string
 	 */
 	public static function category_from_api( $category ) {
-		if ( ! empty( $category ) && $category = array_search( $category, self::$categories ) ) {
-			return $category;
+		if ( ! empty( $category ) ) {
+			$category = array_search( $category, self::$categories, true );
+			if ( $category !== false ) {
+				return $category;
+			}
 		}
 
 		return $category;

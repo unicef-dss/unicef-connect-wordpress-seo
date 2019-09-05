@@ -1,7 +1,9 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
- * @since      1.7.0
+ * @since   1.7.0
  */
 
 /**
@@ -12,14 +14,14 @@ class Yoast_Plugin_Conflict {
 	/**
 	 * The plugins must be grouped per section.
 	 *
-	 * It's possible to check for each section if there are conflicting plugin
+	 * It's possible to check for each section if there are conflicting plugins.
 	 *
 	 * @var array
 	 */
 	protected $plugins = array();
 
 	/**
-	 * All the current active plugins will be stored in this private var
+	 * All the current active plugins will be stored in this private var.
 	 *
 	 * @var array
 	 */
@@ -27,23 +29,24 @@ class Yoast_Plugin_Conflict {
 
 	/**
 	 * After searching for active plugins that are in $this->plugins the active plugins will be stored in this
-	 * property
+	 * property.
 	 *
 	 * @var array
 	 */
 	protected $active_plugins = array();
 
 	/**
-	 * Property for holding instance of itself
+	 * Property for holding instance of itself.
 	 *
 	 * @var Yoast_Plugin_Conflict
 	 */
 	protected static $instance;
 
 	/**
-	 * For the use of singleton pattern. Create instance of itself and return his instance
+	 * For the use of singleton pattern. Create instance of itself and return this instance.
 	 *
-	 * @param string $class_name Give the classname to initialize. If classname is false (empty) it will use it's own __CLASS__.
+	 * @param string $class_name Give the classname to initialize. If classname is
+	 *                           false (empty) it will use it's own __CLASS__.
 	 *
 	 * @return Yoast_Plugin_Conflict
 	 */
@@ -61,7 +64,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Setting instance, all active plugins and search for active plugins
+	 * Setting instance, all active plugins and search for active plugins.
 	 *
 	 * Protected constructor to prevent creating a new instance of the
 	 * *Singleton* via the `new` operator from outside of this class.
@@ -79,7 +82,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Check if there are conflicting plugins for given $plugin_section
+	 * Check if there are conflicting plugins for given $plugin_section.
 	 *
 	 * @param string $plugin_section Type of plugin conflict (such as Open Graph or sitemap).
 	 *
@@ -93,7 +96,7 @@ class Yoast_Plugin_Conflict {
 			$sections_checked = array();
 		}
 
-		if ( ! in_array( $plugin_section, $sections_checked ) ) {
+		if ( ! in_array( $plugin_section, $sections_checked, true ) ) {
 			$sections_checked[] = $plugin_section;
 			$has_conflicts      = ( ! empty( $this->active_plugins[ $plugin_section ] ) );
 
@@ -115,7 +118,7 @@ class Yoast_Plugin_Conflict {
 	 */
 	public function get_conflicting_plugins_as_string( $plugin_section ) {
 		if ( ! function_exists( 'get_plugin_data' ) ) {
-			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
 		// Getting the active plugins by given section.
@@ -123,7 +126,8 @@ class Yoast_Plugin_Conflict {
 
 		$plugin_names = array();
 		foreach ( $plugins as $plugin ) {
-			if ( $name = WPSEO_Utils::get_plugin_name( $plugin ) ) {
+			$name = WPSEO_Utils::get_plugin_name( $plugin );
+			if ( ! empty( $name ) ) {
 				$plugin_names[] = '<em>' . $name . '</em>';
 			}
 		}
@@ -135,7 +139,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Checks for given $plugin_sections for conflicts
+	 * Checks for given $plugin_sections for conflicts.
 	 *
 	 * @param array $plugin_sections Set of sections.
 	 */
@@ -180,7 +184,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Setting an error on the screen
+	 * Setting an error on the screen.
 	 *
 	 * @param string $plugin_section          Type of conflict group (such as Open Graph or sitemap).
 	 * @param string $readable_plugin_section This is the value for the translation.
@@ -217,19 +221,15 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Clear the notification for a plugin
+	 * Clear the notification for a plugin.
 	 *
 	 * @param string $plugin_file Clear the optional notification for this plugin.
 	 */
-	protected function clear_error( $plugin_file ) {
+	public function clear_error( $plugin_file ) {
 		$identifier = $this->get_notification_identifier( $plugin_file );
 
 		$notification_center = Yoast_Notification_Center::get();
-		$notification = $notification_center->get_notification_by_id( 'wpseo-conflict-' . $identifier );
-
-		if ( $notification ) {
-			$notification_center->remove_notification( $notification );
-		}
+		$notification_center->remove_notification_by_id( 'wpseo-conflict-' . $identifier );
 	}
 
 	/**
@@ -244,7 +244,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Loop through plugins and check if each plugin is active
+	 * Loop through plugins and check if each plugin is active.
 	 *
 	 * @param array  $plugins        Set of plugins.
 	 * @param string $plugin_section Type of conflict group (such as Open Graph or sitemap).
@@ -257,16 +257,15 @@ class Yoast_Plugin_Conflict {
 		}
 	}
 
-
 	/**
-	 * Check if given plugin exists in array with all_active_plugins
+	 * Check if given plugin exists in array with all_active_plugins.
 	 *
 	 * @param string $plugin Plugin basename string.
 	 *
 	 * @return bool
 	 */
 	protected function check_plugin_is_active( $plugin ) {
-		return in_array( $plugin, $this->all_active_plugins );
+		return in_array( $plugin, $this->all_active_plugins, true );
 	}
 
 	/**
@@ -284,15 +283,15 @@ class Yoast_Plugin_Conflict {
 			$this->active_plugins[ $plugin_section ] = array();
 		}
 
-		if ( ! in_array( $plugin, $this->active_plugins[ $plugin_section ] ) ) {
+		if ( ! in_array( $plugin, $this->active_plugins[ $plugin_section ], true ) ) {
 			$this->active_plugins[ $plugin_section ][] = $plugin;
 		}
 	}
 
 	/**
-	 * Search in $this->plugins for the given $plugin
+	 * Search in $this->plugins for the given $plugin.
 	 *
-	 * If there is a result it will return the plugin category
+	 * If there is a result it will return the plugin category.
 	 *
 	 * @param string $plugin Plugin basename string.
 	 *
@@ -301,11 +300,10 @@ class Yoast_Plugin_Conflict {
 	protected function find_plugin_category( $plugin ) {
 
 		foreach ( $this->plugins as $plugin_section => $plugins ) {
-			if ( in_array( $plugin, $plugins ) ) {
+			if ( in_array( $plugin, $plugins, true ) ) {
 				return $plugin_section;
 			}
 		}
-
 	}
 
 	/**
@@ -313,7 +311,7 @@ class Yoast_Plugin_Conflict {
 	 */
 	private function remove_deactivated_plugin() {
 		$deactivated_plugin = filter_input( INPUT_GET, 'plugin' );
-		$key_to_remove      = array_search( $deactivated_plugin, $this->all_active_plugins );
+		$key_to_remove      = array_search( $deactivated_plugin, $this->all_active_plugins, true );
 
 		if ( $key_to_remove !== false ) {
 			unset( $this->all_active_plugins[ $key_to_remove ] );
@@ -321,7 +319,7 @@ class Yoast_Plugin_Conflict {
 	}
 
 	/**
-	 * Get the identifier from the plugin file
+	 * Get the identifier from the plugin file.
 	 *
 	 * @param string $plugin_file Plugin file to get Identifier from.
 	 *

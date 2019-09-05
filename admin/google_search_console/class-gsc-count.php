@@ -1,26 +1,38 @@
 <?php
 /**
- * @package WPSEO\Admin|Google_Search_Console
+ * WPSEO plugin file.
+ *
+ * @package WPSEO\Admin\Google_Search_Console
  */
 
 /**
- * Class WPSEO_GSC_Count
+ * Class WPSEO_GSC_Count.
  */
 class WPSEO_GSC_Count {
 
-	// The last checked timestamp.
+	/**
+	 * The name of the option containing the last checked timestamp.
+	 *
+	 * @var string
+	 */
 	const OPTION_CI_LAST_FETCH = 'wpseo_gsc_last_fetch';
 
-	// The option name where the issues counts are saved.
-	const OPTION_CI_COUNTS     = 'wpseo_gsc_issues_counts';
+	/**
+	 * The option name where the issues counts are saved.
+	 *
+	 * @var string
+	 */
+	const OPTION_CI_COUNTS = 'wpseo_gsc_issues_counts';
 
 	/**
+	 * Service that fetches data from GSC API.
+	 *
 	 * @var WPSEO_GSC_Service
 	 */
 	private $service;
 
 	/**
-	 * Holder for the fetched issues from GSC
+	 * Holder for the fetched issues from GSC.
 	 *
 	 * @var array
 	 */
@@ -36,7 +48,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Getting the counts for given platform and return them as an array
+	 * Getting the counts for given platform and return them as an array.
 	 *
 	 * @param string $platform Platform (desktop, mobile, feature phone).
 	 *
@@ -52,7 +64,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Return the fetched issues
+	 * Return the fetched issues.
 	 *
 	 * @return array
 	 */
@@ -61,7 +73,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Listing the issues an gives them back as fetched issues
+	 * Listing the issues an gives them back as fetched issues.
 	 *
 	 * @param string $platform Platform (desktop, mobile, feature phone).
 	 * @param string $category Issue category.
@@ -96,7 +108,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Update the count of the issues
+	 * Update the count of the issues.
 	 *
 	 * @param string  $platform  Platform (desktop, mobile, feature phone).
 	 * @param string  $category  Issue type.
@@ -113,7 +125,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Fetching the counts from the GSC API
+	 * Fetching the counts from the GSC API.
 	 */
 	public function fetch_counts() {
 		if ( WPSEO_GSC_Settings::get_profile() && $this->get_last_fetch() <= strtotime( '-12 hours' ) ) {
@@ -132,7 +144,7 @@ class WPSEO_GSC_Count {
 	}
 
 	/**
-	 * Parsing the received counts from the API and map the keys to plugin friendly values
+	 * Parsing the received counts from the API and map the keys to plugin friendly values.
 	 *
 	 * @param array $fetched_counts Set of retrieved counts.
 	 *
@@ -145,6 +157,7 @@ class WPSEO_GSC_Count {
 
 			foreach ( $categories as $category_name => $category ) {
 				$new_category = WPSEO_GSC_Mapper::category_from_api( $category_name );
+
 				$counts[ $new_platform ][ $new_category ] = $category;
 			}
 		}
@@ -164,7 +177,8 @@ class WPSEO_GSC_Count {
 	private function list_category_issues( array $counts, $platform, $category ) {
 		// When the issues have to be fetched.
 		if ( array_key_exists( $category, $counts ) && $counts[ $category ]['count'] > 0 && $counts[ $category ]['last_fetch'] <= strtotime( '-12 hours' ) ) {
-			if ( $issues = $this->service->fetch_category_issues( WPSEO_GSC_Mapper::platform_to_api( $platform ), WPSEO_GSC_Mapper::category_to_api( $category ) ) ) {
+			$issues = $this->service->fetch_category_issues( WPSEO_GSC_Mapper::platform_to_api( $platform ), WPSEO_GSC_Mapper::category_to_api( $category ) );
+			if ( ! empty( $issues ) ) {
 				$this->issues = $issues;
 			}
 

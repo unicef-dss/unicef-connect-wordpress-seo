@@ -1,19 +1,25 @@
 <?php
 /**
- * @package WPSEO\Admin|Google_Search_Console
+ * WPSEO plugin file.
+ *
+ * @package WPSEO\Admin\Google_Search_Console
  */
 
 /**
- * Class WPSEO_GSC_Service
+ * Class WPSEO_GSC_Service.
  */
 class WPSEO_GSC_Service {
 
 	/**
+	 * Client to connect to the google API.
+	 *
 	 * @var Yoast_Api_Google_Client
 	 */
 	private $client;
 
 	/**
+	 * The google search console profile.
+	 *
 	 * @var string
 	 */
 	private $profile;
@@ -30,7 +36,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Returns the client
+	 * Returns the client.
 	 *
 	 * @return Yoast_Api_Google_Client
 	 */
@@ -39,7 +45,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Removes the option and calls the clients clear_data method to clear that one as well
+	 * Removes the option and calls the clients clear_data method to clear that one as well.
 	 */
 	public function clear_data() {
 		// Clear client data.
@@ -47,7 +53,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Get all sites that are registered in the GSC panel
+	 * Get all sites that are registered in the GSC panel.
 	 *
 	 * @return array
 	 */
@@ -70,7 +76,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Get crawl issues
+	 * Get crawl issues.
 	 *
 	 * @return array
 	 */
@@ -79,6 +85,7 @@ class WPSEO_GSC_Service {
 		$crawl_error_counts = $this->get_crawl_error_counts( $this->profile );
 
 		$return = array();
+		// Ignore coding standards for object properties.
 		if ( ! empty( $crawl_error_counts->countPerTypes ) ) {
 			foreach ( $crawl_error_counts->countPerTypes as $category ) {
 				$return[ $category->platform ][ $category->category ] = array(
@@ -92,7 +99,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Sending request to mark issue as fixed
+	 * Sending request to mark issue as fixed.
 	 *
 	 * @param string $url      Issue URL.
 	 * @param string $platform Platform (desktop, mobile, feature phone).
@@ -106,7 +113,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Fetching the issues from the GSC API
+	 * Fetching the issues from the GSC API.
 	 *
 	 * @param string $platform Platform (desktop, mobile, feature phone).
 	 * @param string $category Issue type.
@@ -125,7 +132,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Setting the GSC client
+	 * Setting the GSC client.
 	 */
 	private function set_client() {
 		try {
@@ -160,7 +167,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Adding notice that the api libs has the wrong version
+	 * Adding notice that the api libs has the wrong version.
 	 *
 	 * @param string $notice Message string.
 	 */
@@ -171,7 +178,7 @@ class WPSEO_GSC_Service {
 	}
 
 	/**
-	 * Getting the crawl error counts
+	 * Getting the crawl error counts.
 	 *
 	 * @param string $profile Profile name string.
 	 *

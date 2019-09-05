@@ -1,17 +1,25 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin\Configurator
  */
 
 /**
- * Class WPSEO_Config_Factory_Post_Type
+ * Class WPSEO_Config_Factory_Post_Type.
  */
 class WPSEO_Config_Factory_Post_Type {
 
-	/** @var WPSEO_Config_Field_Choice_Post_Type[] List of fields */
+	/**
+	 * List of fields.
+	 *
+	 * @var WPSEO_Config_Field_Choice_Post_Type[]
+	 */
 	protected static $fields = array();
 
 	/**
+	 * Retrieves a list of fields.
+	 *
 	 * @return WPSEO_Config_Field_Choice_Post_Type[] List of fields.
 	 */
 	public function get_fields() {
@@ -20,7 +28,9 @@ class WPSEO_Config_Factory_Post_Type {
 
 			$fields = array();
 
+			// WPSEO_Post_type::get_accessible_post_types() should *not* be used to get a similar experience from the settings.
 			$post_types = get_post_types( array( 'public' => true ), 'objects' );
+			$post_types = WPSEO_Post_Type::filter_attachment_post_type( $post_types );
 			if ( ! empty( $post_types ) ) {
 				foreach ( $post_types as $post_type => $post_type_object ) {
 					$label = $this->decode_html_entities( $post_type_object->label );
@@ -39,7 +49,7 @@ class WPSEO_Config_Factory_Post_Type {
 	}
 
 	/**
-	 * Add custom properties for specific post types
+	 * Add custom properties for specific post types.
 	 *
 	 * @param string             $post_type Post type of field that is being added.
 	 * @param WPSEO_Config_Field $field     Field that corresponds to the post type.

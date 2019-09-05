@@ -1,5 +1,7 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\XML_Sitemaps
  */
 
@@ -8,29 +10,30 @@
  */
 class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
-	/** @var array $options All of plugin options. */
-	protected static $options;
-
-	/** @var WPSEO_Sitemap_Image_Parser $image_parser Holds image parser instance. */
+	/**
+	 * Holds image parser instance.
+	 *
+	 * @var WPSEO_Sitemap_Image_Parser
+	 */
 	protected static $image_parser;
+
+	/**
+	 * Determines whether images should be included in the XML sitemap.
+	 *
+	 * @var bool
+	 */
+	private $include_images;
 
 	/**
 	 * Set up object properties for data reuse.
 	 */
 	public function __construct() {
-	}
-
-	/**
-	 * Get Options
-	 *
-	 * @return array
-	 */
-	protected function get_options() {
-		if ( ! isset( self::$options ) ) {
-			self::$options = WPSEO_Options::get_all();
-		}
-
-		return self::$options;
+		/**
+		 * Filter - Allows excluding images from the XML sitemap.
+		 *
+		 * @param bool unsigned True to include, false to exclude.
+		 */
+		$this->include_images = apply_filters( 'wpseo_xml_sitemap_include_images', true );
 	}
 
 	/**
@@ -42,10 +45,18 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 */
 	public function handles_type( $type ) {
 
-		return taxonomy_exists( $type );
+		$taxonomy = get_taxonomy( $type );
+
+		if ( $taxonomy === false || ! $this->is_valid_taxonomy( $taxonomy->name ) || ! $taxonomy->public ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
+	 * Retrieves the links for the sitemap.
+	 *
 	 * @param int $max_entries Entries per sitemap.
 	 *
 	 * @return array
@@ -72,12 +83,13 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 		$all_taxonomies = array();
 
-		foreach ( $taxonomy_names as $taxonomy_name ) {
+		$term_args = array(
+			'hide_empty' => $hide_empty,
+			'fields'     => 'ids',
+		);
 
-			$taxonomy_terms = get_terms( $taxonomy_name, array(
-				'hide_empty' => $hide_empty,
-				'fields'     => 'ids',
-			) );
+		foreach ( $taxonomy_names as $taxonomy_name ) {
+			$taxonomy_terms = get_terms( $taxonomy_name, $term_args );
 
 			if ( count( $taxonomy_terms ) > 0 ) {
 				$all_taxonomies[ $taxonomy_name ] = $taxonomy_terms;
@@ -105,7 +117,7 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 				$current_page = ( $max_pages > 1 ) ? ( $page_counter + 1 ) : '';
 
-				if ( ! is_array( $tax->object_type ) || count( $tax->object_type ) == 0 ) {
+				if ( ! is_array( $tax->object_type ) || count( $tax->object_type ) === 0 ) {
 					continue;
 				}
 
@@ -153,32 +165,38 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 * @param int    $max_entries  Entries per sitemap.
 	 * @param int    $current_page Current page of the sitemap.
 	 *
+	 * @throws OutOfBoundsException When an invalid page is requested.
+	 *
 	 * @return array
 	 */
 	public function get_sitemap_links( $type, $max_entries, $current_page ) {
-
 		global $wpdb;
 
-		$links    = array();
-		$taxonomy = get_taxonomy( $type );
-
-		if ( $taxonomy === false || ! $this->is_valid_taxonomy( $taxonomy->name ) || ! $taxonomy->public ) {
+		$links = array();
+		if ( ! $this->handles_type( $type ) ) {
 			return $links;
 		}
 
-		$options = $this->get_options();
+		$taxonomy = get_taxonomy( $type );
 
 		$steps  = $max_entries;
 		$offset = ( $current_page > 1 ) ? ( ( $current_page - 1 ) * $max_entries ) : 0;
 
 		/** This filter is documented in inc/sitemaps/class-taxonomy-sitemap-provider.php */
-		$hide_empty = apply_filters( 'wpseo_sitemap_exclude_empty_terms', true, $taxonomy );
+		$hide_empty = apply_filters( 'wpseo_sitemap_exclude_empty_terms', true, array( $taxonomy->name ) );
 		$terms      = get_terms( $taxonomy->name, array( 'hide_empty' => $hide_empty ) );
-		$terms      = array_splice( $terms, $offset, $steps );
 
-		if ( empty( $terms ) ) {
-			$terms = array();
+		// If the total term count is lower than the offset, we are on an invalid page.
+		if ( count( $terms ) < $offset ) {
+			throw new OutOfBoundsException( 'Invalid sitemap page requested' );
 		}
+
+		$terms = array_splice( $terms, $offset, $steps );
+		if ( empty( $terms ) ) {
+			return $links;
+		}
+
+		$post_statuses = array_map( 'esc_sql', WPSEO_Sitemaps::get_post_statuses() );
 
 		// Grab last modified date.
 		$sql = "
@@ -190,39 +208,42 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 				ON		term_tax.term_taxonomy_id = term_rel.term_taxonomy_id
 				AND		term_tax.taxonomy = %s
 				AND		term_tax.term_id = %d
-			WHERE	p.post_status IN ('publish','inherit')
+			WHERE	p.post_status IN ('" . implode( "','", $post_statuses ) . "')
 				AND		p.post_password = ''
 		";
 
+		/**
+		 * Filter: 'wpseo_exclude_from_sitemap_by_term_ids' - Allow excluding terms by ID.
+		 *
+		 * @api array $terms_to_exclude The terms to exclude.
+		 */
+		$terms_to_exclude = apply_filters( 'wpseo_exclude_from_sitemap_by_term_ids', array() );
+
 		foreach ( $terms as $term ) {
 
-			$url = array();
-
-			$tax_noindex     = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'noindex' );
-			$tax_sitemap_inc = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'sitemap_include' );
-
-			if ( $tax_noindex === 'noindex' && $tax_sitemap_inc !== 'always' ) {
+			if ( in_array( $term->term_id, $terms_to_exclude, true ) ) {
 				continue;
 			}
 
-			if ( $tax_sitemap_inc === 'never' ) {
+			$url = array();
+
+			$tax_noindex = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'noindex' );
+
+			if ( $tax_noindex === 'noindex' ) {
 				continue;
 			}
 
 			$url['loc'] = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'canonical' );
 
 			if ( ! is_string( $url['loc'] ) || $url['loc'] === '' ) {
-
 				$url['loc'] = get_term_link( $term, $term->taxonomy );
-
-				if ( $options['trailingslash'] === true ) {
-
-					$url['loc'] = trailingslashit( $url['loc'] );
-				}
 			}
 
-			$url['mod']    = $wpdb->get_var( $wpdb->prepare( $sql, $term->taxonomy, $term->term_id ) );
-			$url['images'] = $this->get_image_parser()->get_term_images( $term );
+			$url['mod'] = $wpdb->get_var( $wpdb->prepare( $sql, $term->taxonomy, $term->term_id ) );
+
+			if ( $this->include_images ) {
+				$url['images'] = $this->get_image_parser()->get_term_images( $term );
+			}
 
 			// Deprecated, kept for backwards data compat. R.
 			$url['chf'] = 'daily';
@@ -248,24 +269,23 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 */
 	public function is_valid_taxonomy( $taxonomy_name ) {
 
-		$options = $this->get_options();
-		if ( ! empty( $options[ "taxonomies-{$taxonomy_name}-not_in_sitemap" ] ) ) {
+		if ( WPSEO_Options::get( "noindex-tax-{$taxonomy_name}" ) === true ) {
 			return false;
 		}
 
-		if ( in_array( $taxonomy_name, array( 'link_category', 'nav_menu' ) ) ) {
+		if ( in_array( $taxonomy_name, array( 'link_category', 'nav_menu' ), true ) ) {
 			return false;
 		}
 
-		if ( 'post_format' === $taxonomy_name && ! empty( $options['disable-post_format'] ) ) {
+		if ( 'post_format' === $taxonomy_name && WPSEO_Options::get( 'disable-post_format', false ) ) {
 			return false;
 		}
 
 		/**
 		 * Filter to exclude the taxonomy from the XML sitemap.
 		 *
-		 * @param boolean $exclude        Defaults to false.
-		 * @param string  $taxonomy_name  Name of the taxonomy to exclude..
+		 * @param boolean $exclude       Defaults to false.
+		 * @param string  $taxonomy_name Name of the taxonomy to exclude..
 		 */
 		if ( apply_filters( 'wpseo_sitemap_exclude_taxonomy', false, $taxonomy_name ) ) {
 			return false;
@@ -275,7 +295,7 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	}
 
 	/**
-	 * Get the Image Parser
+	 * Get the Image Parser.
 	 *
 	 * @return WPSEO_Sitemap_Image_Parser
 	 */
@@ -285,5 +305,17 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		}
 
 		return self::$image_parser;
+	}
+
+	/* ********************* DEPRECATED METHODS ********************* */
+
+	/**
+	 * Get all the options.
+	 *
+	 * @deprecated 7.0
+	 * @codeCoverageIgnore
+	 */
+	protected function get_options() {
+		_deprecated_function( __METHOD__, 'WPSEO 7.0', 'WPSEO_Options::get' );
 	}
 }

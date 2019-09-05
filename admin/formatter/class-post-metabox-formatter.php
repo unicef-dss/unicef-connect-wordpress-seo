@@ -1,25 +1,26 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin\Formatter
  */
 
 /**
- * This class provides data for the post metabox by return its values for localization
+ * This class provides data for the post metabox by return its values for localization.
  */
 class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface {
 
 	/**
+	 * Holds the WordPress Post.
+	 *
 	 * @var WP_Post
 	 */
 	private $post;
 
 	/**
-	 * @var array Array with the WPSEO_Titles options.
-	 */
-	protected $options;
-
-	/**
-	 * @var string The permalink to follow.
+	 * The permalink to follow.
+	 *
+	 * @var string
 	 */
 	private $permalink;
 
@@ -32,7 +33,6 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	 */
 	public function __construct( $post, array $options, $structure ) {
 		$this->post      = $post;
-		$this->options   = $options;
 		$this->permalink = $structure;
 	}
 
@@ -64,7 +64,7 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	}
 
 	/**
-	 * Returns the url to search for keyword for the post
+	 * Returns the url to search for keyword for the post.
 	 *
 	 * @return string
 	 */
@@ -73,7 +73,7 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	}
 
 	/**
-	 * Returns the url to edit the taxonomy
+	 * Returns the url to edit the taxonomy.
 	 *
 	 * @return string
 	 */
@@ -82,7 +82,7 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	}
 
 	/**
-	 * Returns a base URL for use in the JS, takes permalink structure into account
+	 * Returns a base URL for use in the JS, takes permalink structure into account.
 	 *
 	 * @return string
 	 */
@@ -105,25 +105,68 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	}
 
 	/**
-	 * Counting the number of given keyword used for other posts than given post_id
+	 * Counts the number of given keywords used for other posts other than the given post_id.
 	 *
-	 * @return array
+	 * @return array The keyword and the associated posts that use it.
 	 */
 	private function get_focus_keyword_usage() {
 		$keyword = WPSEO_Meta::get_value( 'focuskw', $this->post->ID );
+		$usage   = array( $keyword => $this->get_keyword_usage_for_current_post( $keyword ) );
 
-		return array(
-			$keyword => WPSEO_Meta::keyword_usage( $keyword, $this->post->ID ),
-		);
+		if ( WPSEO_Utils::is_yoast_seo_premium() ) {
+			return $this->get_premium_keywords( $usage );
+		}
+
+		return $usage;
+	}
+
+	/**
+	 * Retrieves the additional keywords from Premium, that are associated with the post.
+	 *
+	 * @param array $usage The original keyword usage for the main keyword.
+	 *
+	 * @return array The keyword usage, including the additional keywords.
+	 */
+	protected function get_premium_keywords( $usage ) {
+		$additional_keywords = json_decode( WPSEO_Meta::get_value( 'focuskeywords', $this->post->ID ), true );
+
+		if ( empty( $additional_keywords ) ) {
+			return $usage;
+		}
+
+		foreach ( $additional_keywords as $additional_keyword ) {
+			$keyword = $additional_keyword['keyword'];
+
+			$usage[ $keyword ] = $this->get_keyword_usage_for_current_post( $keyword );
+		}
+
+		return $usage;
+	}
+
+	/**
+	 * Gets the keyword usage for the current post and the specified keyword.
+	 *
+	 * @param string $keyword The keyword to check the usage of.
+	 *
+	 * @return array The post IDs which use the passed keyword.
+	 */
+	protected function get_keyword_usage_for_current_post( $keyword ) {
+		return WPSEO_Meta::keyword_usage( $keyword, $this->post->ID );
 	}
 
 	/**
 	 * Retrieves the title template.
 	 *
-	 * @return string
+	 * @return string The title template.
 	 */
 	private function get_title_template() {
-		return $this->get_template( 'title' );
+		$title = $this->get_template( 'title' );
+
+		if ( $title === '' ) {
+			return '%%title%% %%sep%% %%sitename%%';
+		}
+
+		return $title;
 	}
 
 	/**
@@ -145,15 +188,15 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	private function get_template( $template_option_name ) {
 		$needed_option = $template_option_name . '-' . $this->post->post_type;
 
-		if ( isset( $this->options[ $needed_option ] ) && $this->options[ $needed_option ] !== '' ) {
-			return $this->options[ $needed_option ];
+		if ( WPSEO_Options::get( $needed_option, '' ) !== '' ) {
+			return WPSEO_Options::get( $needed_option );
 		}
 
 		return '';
 	}
 
 	/**
-	 * Determines the date to be displayed in the snippet preview
+	 * Determines the date to be displayed in the snippet preview.
 	 *
 	 * @return string
 	 */
@@ -173,9 +216,8 @@ class WPSEO_Post_Metabox_Formatter implements WPSEO_Metabox_Formatter_Interface 
 	 * @return bool
 	 */
 	private function is_show_date_enabled() {
-		$post_type = $this->post->post_type;
-		$key       = sprintf( 'showdate-%s', $post_type );
+		$key = sprintf( 'showdate-%s', $this->post->post_type );
 
-		return isset( $this->options[ $key ] ) && true === $this->options[ $key ];
+		return WPSEO_Options::get( $key, true );
 	}
 }

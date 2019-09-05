@@ -1,14 +1,18 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
  */
 
 /**
- * Class WPSEO_GSC_Config
+ * Class WPSEO_GSC_Config.
  */
 class WPSEO_GSC_Config {
 
 	/**
+	 * The Google search console configuration.
+	 *
 	 * @var array
 	 */
 	public static $gsc = array(

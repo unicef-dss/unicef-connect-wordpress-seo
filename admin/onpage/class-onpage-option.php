@@ -1,45 +1,80 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
  */
 
 /**
- * This class handles the data for the option where the OnPage.org data is stored.
+ * This class handles the data for the option where the Ryte data is stored.
  */
 class WPSEO_OnPage_Option {
 
-	const NOT_FETCHED      = 99;
-	const IS_INDEXABLE     = 1;
-	const IS_NOT_INDEXABLE = 0;
-	const CANNOT_FETCH     = -1;
+	/**
+	 * Indicates the data is not fetched.
+	 *
+	 * @var int
+	 */
+	const NOT_FETCHED = 99;
 
 	/**
-	 *  The name of the option where data will be stored
+	 * Indicates the option is indexable.
+	 *
+	 * @var int
+	 */
+	const IS_INDEXABLE = 1;
+
+	/**
+	 * Indicates the option is not indexable.
+	 *
+	 * @var int
+	 */
+	const IS_NOT_INDEXABLE = 0;
+
+	/**
+	 * Indicates the data could not be fetched.
+	 *
+	 * @var int
+	 */
+	const CANNOT_FETCH = -1;
+
+	/**
+	 * The name of the option where data will be stored.
+	 *
+	 * @var string
 	 */
 	const OPTION_NAME = 'wpseo_onpage';
 
 	/**
-	 * The key of the status in the option
+	 * The key of the status in the option.
+	 *
+	 * @var string
 	 */
 	const STATUS = 'status';
 
 	/**
 	 * The key of the last fetch date in the option.
+	 *
+	 * @var string
 	 */
 	const LAST_FETCH = 'last_fetch';
 
 	/**
 	 * The limit for fetching the status manually.
+	 *
+	 * @var int
 	 */
 	const FETCH_LIMIT = 15;
 
 	/**
-	 * @var array The OnPage.org option stored in the database.
+	 * The Ryte option stored in the database.
+	 *
+	 * @var array
 	 */
 	private $onpage_option;
 
 	/**
-	 * Setting the object by setting the properties
+	 * Setting the object by setting the properties.
 	 */
 	public function __construct() {
 		$this->onpage_option = $this->get_option();
@@ -77,7 +112,7 @@ class WPSEO_OnPage_Option {
 	}
 
 	/**
-	 * Check if the last fetch is within the time of 60 minutes
+	 * Check if the last fetch is within the time of 60 minutes.
 	 *
 	 * @return bool
 	 */
@@ -86,43 +121,32 @@ class WPSEO_OnPage_Option {
 	}
 
 	/**
-	 * Saving the option with the current data
+	 * Saving the option with the current data.
 	 */
 	public function save_option() {
 		update_option( self::OPTION_NAME, $this->onpage_option );
 	}
 
 	/**
-	 * Returns the value of the onpage_enabled status
+	 * Returns the value of the onpage_enabled status.
 	 *
 	 * @return bool
 	 */
 	public function is_enabled() {
-		$options = get_option( 'wpseo' );
-
-		return ! empty( $options['onpage_indexability'] );
+		return WPSEO_Options::get( 'onpage_indexability' );
 	}
 
 	/**
-	 * Getting the option with the OnPage.org data
+	 * Getting the option with the Ryte data.
 	 *
 	 * @return array
 	 */
 	private function get_option() {
-		return get_option( self::OPTION_NAME, array( self::STATUS => self::NOT_FETCHED, self::LAST_FETCH => 0 ) );
-	}
+		$default = array(
+			self::STATUS     => self::NOT_FETCHED,
+			self::LAST_FETCH => 0,
+		);
 
-	/**
-	 * @deprecated 3.0.2
-	 * @codeCoverageIgnore
-	 *
-	 * Returns the indexable status of the website.
-	 *
-	 * @return bool
-	 */
-	public function is_indexable() {
-		_deprecated_function( __METHOD__, 'WPSEO 3.0.2' );
-
-		return self::IS_INDEXABLE === $this->get_status();
+		return get_option( self::OPTION_NAME, $default );
 	}
 }
